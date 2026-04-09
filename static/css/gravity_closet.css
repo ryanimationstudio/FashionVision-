@@ -1,0 +1,423 @@
+/* ==========================================================================
+   FashionVision — Gravity Closet
+   Physics canvas overlay + HUD controls + metadata modal
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Canvas Overlay (fullscreen, sits over everything)
+   -------------------------------------------------------------------------- */
+#gravity-canvas-wrap {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  pointer-events: none;
+  display: none;
+  background: transparent;
+  overflow: hidden;
+  /* <-- NEW: wall leakage fix */
+}
+
+#gravity-canvas-wrap.active {
+  display: block;
+  pointer-events: all;
+}
+
+#gravity-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* --------------------------------------------------------------------------
+   HUD Controls (always visible, floats top-right when closet is active)
+   -------------------------------------------------------------------------- */
+#gc-hud {
+  position: fixed;
+  top: 72px;
+  right: 1.5rem;
+  z-index: 950;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  pointer-events: all;
+  opacity: 0;
+  transform: translateX(100%);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+#gc-hud.active {
+  opacity: 1;
+  transform: translateX(0);
+  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  /* <-- NEW: premium slide */
+}
+
+/* "Break Reality" trigger — shown on history/analyze page at all times */
+#gc-trigger-btn {
+  position: fixed;
+  bottom: 1.75rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 950;
+  background: linear-gradient(135deg, #c084fc, #f472b6);
+  color: #fff;
+  border: none;
+  border-radius: 9999px;
+  padding: 0.7rem 1.6rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  box-shadow: 0 4px 32px rgba(192, 132, 252, 0.45);
+  letter-spacing: 0.04em;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.3s ease;
+  display: none;
+}
+
+#gc-trigger-btn:hover {
+  transform: translateX(-50%) translateY(-3px) scale(1.04);
+  box-shadow: 0 8px 44px rgba(192, 132, 252, 0.6);
+}
+
+#gc-trigger-btn.glowing {
+  animation: gcPulse 2.2s ease-in-out infinite;
+}
+
+@keyframes gcPulse {
+
+  0%,
+  100% {
+    box-shadow: 0 4px 32px rgba(192, 132, 252, 0.45);
+  }
+
+  50% {
+    box-shadow: 0 4px 52px rgba(244, 114, 182, 0.75);
+  }
+}
+
+/* HUD buttons */
+.gc-btn {
+  background: rgba(22, 22, 31, 0.92);
+  border: 1px solid rgba(192, 132, 252, 0.3);
+  border-radius: 10px;
+  color: #f0f0f8;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.55rem 1rem;
+  cursor: pointer;
+  backdrop-filter: blur(12px);
+  transition: all 0.18s ease;
+  white-space: nowrap;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 150px;
+}
+
+.gc-btn:hover {
+  background: rgba(192, 132, 252, 0.18);
+  border-color: rgba(192, 132, 252, 0.65);
+  transform: translateX(-3px);
+}
+
+.gc-btn.active-state {
+  background: rgba(192, 132, 252, 0.22);
+  border-color: #c084fc;
+  color: #c084fc;
+}
+
+/* item counter badge */
+#gc-item-count {
+  background: rgba(22, 22, 31, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.45);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.72rem;
+  padding: 0.35rem 0.9rem;
+  text-align: center;
+  backdrop-filter: blur(8px);
+  letter-spacing: 0.04em;
+}
+
+/* --------------------------------------------------------------------------
+   Shatter Effect — applied to the whole dashboard layout when triggered
+   -------------------------------------------------------------------------- */
+.shatter-active {
+  animation: shatterOut 0.5s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+  pointer-events: none;
+}
+
+@keyframes shatterOut {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(0.95);
+    filter: blur(2px);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Physics Tag States (for draggable elements)
+   -------------------------------------------------------------------------- */
+.physics-tag {
+  transition: all 0.2s ease;
+  cursor: grab;
+}
+
+.physics-tag:hover {
+  border: 2px solid #c084fc !important;
+  transform: scale(1.02);
+  box-shadow: 0 0 12px rgba(192, 132, 252, 0.3);
+}
+
+.physics-tag:active {
+  cursor: grabbing;
+  transform: scale(0.98);
+}
+
+/* --------------------------------------------------------------------------
+   Metadata Modal
+   -------------------------------------------------------------------------- */
+#gc-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  background: rgba(0, 0, 0, 0.8);
+  /* <-- NEW: darker background */
+  backdrop-filter: blur(15px);
+  /* <-- NEW: stronger blur */
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  animation: gcFadeIn 0.2s ease;
+}
+
+#gc-modal-backdrop.open {
+  display: flex;
+}
+
+@keyframes gcFadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+#gc-modal {
+  background: #16161f;
+  border: 1px solid #2a2a3a;
+  border-radius: 20px;
+  padding: 2rem;
+  max-width: 480px;
+  width: 100%;
+  position: relative;
+  animation: gcSlideUp 0.25s ease;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(192, 132, 252, 0.12);
+}
+
+@keyframes gcSlideUp {
+  from {
+    transform: translateY(24px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+#gc-modal__close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: rgba(255, 255, 255, 0.07);
+  border: none;
+  border-radius: 50%;
+  color: #8888a8;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  font-size: 1rem;
+  display: grid;
+  place-items: center;
+  transition: background 0.15s, color 0.15s;
+}
+
+#gc-modal__close:hover {
+  background: rgba(248, 113, 113, 0.2);
+  color: #f87171;
+}
+
+#gc-modal__img {
+  width: 100%;
+  height: 380px;
+  object-fit: contain;
+  border-radius: 12px;
+  margin-bottom: 1.25rem;
+  background: #0d0d12;
+  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.5);
+}
+
+#gc-modal__title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.2rem;
+  color: #f0f0f8;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+#gc-modal__attrs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+}
+
+.gc-attr-badge,
+.gc-attr-chip {
+  background: rgba(192, 132, 252, 0.1);
+  border: 1px solid rgba(192, 132, 252, 0.25);
+  color: #c084fc;
+  font-size: 0.75rem;
+  padding: 4px 12px;
+  border-radius: 8px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.gc-attr-chip__label {
+  opacity: 0.6;
+  font-weight: 400;
+}
+
+.gc-attr-chip__value {
+  font-weight: 700;
+}
+
+#gc-modal__description {
+  font-size: 0.85rem;
+  color: #8888a8;
+  line-height: 1.65;
+  margin-bottom: 1rem;
+  font-family: 'Inter', sans-serif;
+}
+
+#gc-modal__hashtags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.gc-hash-pill {
+  background: rgba(244, 114, 182, 0.1);
+  border: 1px solid rgba(244, 114, 182, 0.2);
+  color: #f472b6;
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-family: 'Inter', sans-serif;
+}
+
+/* --------------------------------------------------------------------------
+   Ambient Glow with moving radial gradients
+   -------------------------------------------------------------------------- */
+#gc-ambient {
+  position: fixed;
+  inset: 0;
+  z-index: 899;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  background:
+    radial-gradient(ellipse 70% 50% at 20% 20%, rgba(192, 132, 252, 0.06), transparent),
+    radial-gradient(ellipse 60% 60% at 80% 80%, rgba(244, 114, 182, 0.05), transparent);
+  animation: ambientMove 20s infinite alternate;
+}
+
+#gc-ambient.active {
+  opacity: 1;
+}
+
+@keyframes ambientMove {
+  0% {
+    background-position: 0% 0%;
+    background-size: 100% 100%;
+  }
+
+  100% {
+    background-position: 100% 100%;
+    background-size: 120% 120%;
+  }
+}
+
+#gc-ambient::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 50% 40% at 70% 30%, rgba(192, 132, 252, 0.08), transparent);
+  animation: drift 15s infinite alternate;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+@keyframes drift {
+  0% {
+    transform: translate(0%, 0%) scale(1);
+  }
+
+  100% {
+    transform: translate(10%, 5%) scale(1.2);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Crosshair / cursor override while dragging
+   -------------------------------------------------------------------------- */
+#gravity-canvas-wrap.active {
+  cursor: grab;
+}
+
+#gravity-canvas-wrap.active:active {
+  cursor: grabbing;
+}
+
+/* --------------------------------------------------------------------------
+   Exit hint tooltip
+   -------------------------------------------------------------------------- */
+#gc-exit-hint {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 960;
+  background: rgba(22, 22, 31, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 9999px;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 0.75rem;
+  font-family: 'Inter', sans-serif;
+  padding: 0.4rem 1.1rem;
+  display: none;
+  backdrop-filter: blur(8px);
+  letter-spacing: 0.03em;
+}
+
+#gc-exit-hint.active {
+  display: block;
+}

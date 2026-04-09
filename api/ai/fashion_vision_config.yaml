@@ -1,0 +1,31 @@
+# Confidence threshold (0.0 - 1.0)
+confidence_threshold: 0.25
+
+# Cartoon detection thresholds
+cartoon_saturation_threshold: 0.85
+cartoon_saturation_threshold_2: 0.80
+cartoon_hue_buckets_threshold: 4
+
+# Size constraints
+min_image_dimension: 224
+max_image_dimension: 4096
+
+# Inference timeout (increased for slower environments)
+inference_timeout_seconds: 90
+
+# Cache settings
+cache_enabled: true
+cache_max_size_mb: 100
+cache_ttl_minutes: 60
+
+# Logging
+log_level: INFO
+log_format: json
+
+# Model settings
+device_preference: "auto"
+model_name: "openai/clip-vit-base-patch32"
+
+# Risk profiles
+strict_mode: false
+lenient_mode: false

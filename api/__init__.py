@@ -1,0 +1,3 @@
+"""
+FashionVision - Initialized API package.
+"""

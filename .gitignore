@@ -1,0 +1,23 @@
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Python environments
+.venv/
+venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Tool caches
+.pytest_cache/
+.mypy_cache/
+.hypothesis/
+
+# OS/editor files
+.DS_Store
+.vscode/

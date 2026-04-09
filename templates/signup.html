@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registration Node // FashionVision</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,900;1,900&display=swap"
+    rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: '#FF8C00',
+            luxury: '#0a0a0f',
+          },
+          fontFamily: { sans: ['Inter', 'sans-serif'], serif: ['Playfair Display', 'serif'] }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* --- 📽️ Scroll Reveal System --- */
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: all 1s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .reveal.active {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    #fv-logo {
+      width: 48px;
+      height: 48px;
+      border: 3px solid #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 950;
+      font-size: 16px;
+      border-radius: 12px;
+      background: #000;
+      color: #fff;
+    }
+
+    input::placeholder {
+      color: rgba(0, 0, 0, 0.3);
+    }
+  </style>
+</head>
+
+<body class="min-h-screen flex flex-col font-sans selection:bg-black selection:text-white bg-black text-white">
+
+  <!-- Cinematic Background -->
+  <div class="fixed inset-0 z-0">
+    <img src="https://images.unsplash.com/photo-1509631179647-0177331693ae?w=1920&q=80"
+      class="w-full h-full object-cover opacity-40 blur-xl scale-110 grayscale" alt="">
+    <div class="absolute inset-0 bg-gradient-to-br from-black/60 via-transparent to-black/60"></div>
+  </div>
+
+  <!-- Master HUD: Floating Capsule -->
+  <header
+    class="fixed top-6 left-1/2 -translate-x-1/2 w-[92%] max-w-[1400px] h-16 bg-black/40 backdrop-blur-2xl border border-white/10 rounded-full grid grid-cols-[1fr_auto_1fr] items-center px-6 z-50">
+    <a href="/"
+      class="w-11 h-11 bg-white text-black rounded-full flex items-center justify-center font-serif font-black text-sm tracking-tight transition-transform active:scale-95">FV</a>
+    <div class="text-[9px] font-black uppercase tracking-[0.4em] text-white/50 hidden md:block text-center">
+      Identity // Enrollment Node 1.0</div>
+    <a href="/login"
+      class="justify-self-end text-[9px] font-black uppercase tracking-[0.2em] text-white/60 hover:text-white transition-colors">Sign
+      In</a>
+  </header>
+
+  <!-- Signup Form -->
+  <main class="grow flex items-center justify-center p-6 pt-32 relative z-10">
+    <div
+      class="reveal w-full max-w-[420px] bg-white/10 backdrop-blur-3xl border border-white/20 p-10 md:p-12 rounded-[40px] shadow-[0_45px_100px_-30px_rgba(0,0,0,0.5)]">
+
+      <div class="mb-10">
+        <h1 class="font-serif text-5xl font-black italic tracking-tighter text-white leading-none mb-4 uppercase">Join
+          <span class="text-white/40">Archive</span>
+        </h1>
+        <p class="text-[10px] font-bold text-white/30 uppercase tracking-[0.22em]">Create your personal fashion profile.
+        </p>
+      </div>
+
+      <div id="signup-alert"
+        class="hidden mb-8 p-5 rounded-2xl bg-white/10 text-white text-[10px] font-black uppercase tracking-widest border border-white/20 italic backdrop-blur-md">
+      </div>
+
+      <form id="signup-form" class="space-y-6">
+        <div class="space-y-3">
+          <label class="block text-[9px] font-black uppercase tracking-[0.25em] text-white/40 ml-1">Email
+            Satellite</label>
+          <input type="email" id="signup-email" required
+            class="w-full h-14 bg-white/5 rounded-2xl px-6 font-semibold text-white outline-none focus:bg-white/10 focus:ring-4 focus:ring-white/5 border border-white/10 focus:border-white/30 transition-all text-sm placeholder-white/20"
+            placeholder="fashion@style.vision">
+        </div>
+
+        <div class="space-y-3">
+          <label class="block text-[9px] font-black uppercase tracking-[0.25em] text-white/40 ml-1">Access Key</label>
+          <input type="password" id="signup-password" required
+            class="w-full h-14 bg-white/5 rounded-2xl px-6 font-semibold text-white outline-none focus:bg-white/10 focus:ring-4 focus:ring-white/5 border border-white/10 focus:border-white/30 transition-all text-sm placeholder-white/20"
+            placeholder="Min. 8 characters">
+        </div>
+
+        <div class="space-y-3">
+          <label class="block text-[9px] font-black uppercase tracking-[0.25em] text-white/40 ml-1">Verify Key</label>
+          <input type="password" id="signup-confirm" required
+            class="w-full h-14 bg-white/5 rounded-2xl px-6 font-semibold text-white outline-none focus:bg-white/10 focus:ring-4 focus:ring-white/5 border border-white/10 focus:border-white/30 transition-all text-sm placeholder-white/20"
+            placeholder="Repeat access key">
+        </div>
+
+        <button type="submit" id="signup-btn"
+          class="w-full h-16 bg-white text-black active:scale-95 transition-all rounded-full flex items-center justify-center gap-3 shadow-[0_20px_40px_-5px_rgba(255,255,255,0.1)] group overflow-hidden relative">
+          <span class="text-[10px] font-black uppercase tracking-[0.4em] z-10">Start Your Archive</span>
+        </button>
+      </form>
+
+      <div class="mt-12 text-center border-t border-white/10 pt-8">
+        <p class="text-[10px] font-bold text-white/20 uppercase tracking-widest mb-4">Establishing Member?</p>
+        <a href="/login"
+          class="text-[11px] font-black uppercase tracking-widest text-white hover:text-white/70 underline underline-offset-8 decoration-white/20 transition-all">Sign
+          In Here</a>
+      </div>
+    </div>
+  </main>
+
+  <!-- Glass Verification Modal -->
+  <div id="verify-modal"
+    class="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 backdrop-blur-xl opacity-0 pointer-events-none transition-opacity duration-500">
+    <div
+      class="bg-white/10 border border-white/20 shadow-[0_50px_120px_rgba(0,0,0,0.5)] p-12 rounded-[50px] text-center max-w-sm mx-4 transform transition-transform duration-500 scale-95">
+      <div class="w-20 h-20 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-8 text-3xl">📧</div>
+      <h3 class="font-serif text-3xl font-black mb-4 text-white">Check Inbox</h3>
+      <p class="text-[10px] font-bold text-white/40 uppercase tracking-widest leading-loose mb-10">Check your satellite
+        email for enrollment link.</p>
+      <div class="w-10 h-10 border-[3px] border-white/10 border-t-white rounded-full animate-spin mx-auto"></div>
+    </div>
+  </div>
+
+  <!-- Auth Script -->
+  <script type="module">
+    import { isAuthenticated } from "/static/js/auth.js";
+
+    document.addEventListener("DOMContentLoaded", () => {
+      // Auto-redirect removed to prevent loop
+
+      const form = document.getElementById("signup-form");
+      const btn = document.getElementById("signup-btn");
+      const alertArea = document.getElementById("signup-alert");
+      const modal = document.getElementById("verify-modal");
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const email = document.getElementById("signup-email").value;
+        const password = document.getElementById("signup-password").value;
+        const confirm = document.getElementById("signup-confirm").value;
+
+        if (password !== confirm) {
+          alertArea.textContent = "Security keys do not match.";
+          alertArea.classList.remove("hidden");
+          return;
+        }
+
+        btn.disabled = true;
+        const originalContent = btn.innerHTML;
+        btn.innerHTML = `<div class="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>`;
+        alertArea.classList.add("hidden");
+
+        try {
+          const res = await fetch("/api/auth/signup", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password })
+          });
+          const data = await res.json();
+
+          if (res.ok) {
+            modal.classList.remove("opacity-0", "pointer-events-none");
+            modal.querySelector("div").classList.remove("scale-95");
+            setTimeout(() => window.location.replace("/login"), 3500);
+          } else {
+            alertArea.textContent = (data.error || "Establishment Failed.").toUpperCase();
+            alertArea.classList.remove("hidden");
+            btn.disabled = false;
+            btn.innerHTML = originalContent;
+          }
+        } catch (err) {
+          alertArea.textContent = "NETWORK ERROR. NODE UNREACHABLE.";
+          alertArea.classList.remove("hidden");
+          btn.disabled = false;
+          btn.innerHTML = originalContent;
+        }
+      });
+
+      // --- 📽️ Active Scroll Reveal Engine ---
+      const obsOptions = { threshold: 0.1 };
+      const obs = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) entry.target.classList.add('active');
+        });
+      }, obsOptions);
+      document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+    });
+  </script>
+</body>
+
+</html>

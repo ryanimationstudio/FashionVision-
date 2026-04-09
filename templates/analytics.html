@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analytics — FashionVision</title>
+  <meta name="description"
+    content="Your personal style intelligence report — trends, patterns, and evolution over time.">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800;900&family=Playfair+Display:ital,wght@0,900;1,700&display=swap"
+    rel="stylesheet">
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --pink: #EC4899;
+      --orange: #F97316;
+      --serif: 'Playfair Display', serif;
+      --sans: 'Inter', sans-serif;
+      --bg: #0a0a0a;
+      --surface: rgba(255, 255, 255, 0.04);
+      --border: rgba(255, 255, 255, 0.07);
+      --muted: rgba(255, 255, 255, 0.35);
+    }
+
+    html,
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: #fff;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      padding: 20px 48px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(10, 10, 10, 0.8);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-logo {
+      font-family: var(--serif);
+      font-size: 16px;
+      font-weight: 900;
+      color: #fff;
+      text-decoration: none;
+      border: 1.5px solid rgba(255, 255, 255, 0.5);
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 32px;
+      align-items: center;
+    }
+
+    .nav-links a {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.2s;
+      white-space: nowrap;
+    }
+
+    .nav-links a:hover,
+    .nav-links a.active {
+      color: #fff;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      padding: 80px 48px 40px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .eyebrow {
+      font-size: 8px;
+      font-weight: 800;
+      letter-spacing: 0.38em;
+      text-transform: uppercase;
+      color: var(--pink);
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      font-family: var(--serif);
+      font-size: clamp(2.5rem, 6vw, 5rem);
+      font-weight: 900;
+      line-height: 0.9;
+      letter-spacing: -0.03em;
+    }
+
+    h1 em {
+      font-style: italic;
+      color: rgba(255, 255, 255, 0.3);
+    }
+
+    /* ── STAT CARDS ── */
+    .stat-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1px;
+      background: var(--border);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .stat-card {
+      background: var(--bg);
+      padding: 36px 32px;
+    }
+
+    .stat-label {
+      font-size: 8px;
+      font-weight: 700;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    .stat-value {
+      font-family: var(--serif);
+      font-size: 3.5rem;
+      font-weight: 900;
+      line-height: 1;
+      color: #fff;
+      letter-spacing: -0.04em;
+    }
+
+    .stat-sub {
+      font-size: 9px;
+      color: var(--muted);
+      margin-top: 6px;
+      font-weight: 500;
+    }
+
+    /* ── CHART GRID ── */
+    .chart-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      background: var(--border);
+      border-top: 1px solid var(--border);
+    }
+
+    @media (max-width: 900px) {
+      .chart-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .chart-card {
+      background: var(--bg);
+      padding: 40px;
+    }
+
+    .chart-title {
+      font-size: 8px;
+      font-weight: 800;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 28px;
+    }
+
+    .chart-title span {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--pink), var(--orange));
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+
+    canvas {
+      max-height: 280px;
+    }
+
+    /* ── TIMELINE (Style Evolution) ── */
+    .timeline-section {
+      padding: 56px 48px;
+      border-top: 1px solid var(--border);
+      background: #000;
+    }
+
+    .section-label {
+      font-size: 8px;
+      font-weight: 800;
+      letter-spacing: 0.38em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 36px;
+    }
+
+    .timeline-rail {
+      display: flex;
+      gap: 0;
+      overflow-x: auto;
+      padding-bottom: 16px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--pink) var(--border);
+    }
+
+    .timeline-rail::-webkit-scrollbar {
+      height: 1px;
+    }
+
+    .timeline-rail::-webkit-scrollbar-track {
+      background: var(--border);
+    }
+
+    .timeline-rail::-webkit-scrollbar-thumb {
+      background: var(--pink);
+      border-radius: 1px;
+    }
+
+    .tl-item {
+      flex: 0 0 120px;
+      border-left: 1px solid var(--border);
+      padding: 0 20px 24px 16px;
+      position: relative;
+    }
+
+    .tl-item::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: -4px;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--pink), var(--orange));
+    }
+
+    .tl-month {
+      font-size: 8px;
+      font-weight: 700;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 10px;
+      margin-top: 2px;
+    }
+
+    .tl-style {
+      font-family: var(--serif);
+      font-size: 1.1rem;
+      font-weight: 900;
+      font-style: italic;
+      color: #fff;
+      line-height: 1.1;
+    }
+
+    .tl-count {
+      font-size: 8px;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    /* Empty State */
+    .empty-state {
+      padding: 80px 48px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .empty-state h2 {
+      font-family: var(--serif);
+      font-size: 2rem;
+      font-style: italic;
+      color: rgba(255, 255, 255, 0.15);
+      margin-bottom: 12px;
+    }
+
+    /* Loading Shimmer */
+    @keyframes shimmer {
+      0% {
+        background-position: -400px 0;
+      }
+
+      100% {
+        background-position: 400px 0;
+      }
+    }
+
+    .shimmer {
+      background: linear-gradient(90deg, var(--surface) 25%, rgba(255, 255, 255, 0.07) 50%, var(--surface) 75%);
+      background-size: 800px 100%;
+      animation: shimmer 1.4s infinite;
+      border-radius: 4px;
+      display: inline-block;
+    }
+
+    /* Trend Gallery */
+    .trend-gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 1px;
+      background: var(--border);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .trend-item {
+      background: #000;
+      aspect-ratio: 3/4;
+      overflow: hidden;
+    }
+
+    .trend-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: grayscale(50%);
+      transition: filter 0.5s ease, transform 0.5s ease;
+    }
+
+    .trend-item:hover img {
+      filter: grayscale(0%);
+      transform: scale(1.05);
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+      nav {
+        padding: 16px 24px;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .nav-links {
+        gap: 16px;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+
+      .hero {
+        padding: 60px 24px 30px;
+      }
+
+      .stat-row {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .chart-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .timeline-section {
+        padding: 40px 24px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Navigation -->
+  <nav role="navigation" aria-label="Main navigation">
+    <a href="/" class="nav-logo" aria-label="FashionVision Home">FV</a>
+    <div class="nav-links">
+      <a href="/dashboard">Lab</a>
+      <a href="/history">Archive</a>
+      <a href="/analytics" class="active">Analytics</a>
+      <a href="/logout" id="nav-logout" class="nav-logout">Sign Out</a>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <div class="hero">
+    <div class="eyebrow">Style Intelligence · Personal Report</div>
+    <h1>Your Fashion<br><em>DNA.</em></h1>
+  </div>
+
+  <!-- Designer's AI Insights -->
+  <div class="hero"
+    style="border-top: 1px solid var(--border); background: rgba(255,255,255,0.01); padding: 60px 48px;">
+    <div class="flex flex-col md:flex-row md:items-start justify-between gap-12">
+      <!-- Left: Personality Title -->
+      <div class="flex-none">
+        <div class="eyebrow" style="color: #fff; opacity: 0.5;">01 — YOUR ARCHETYPE</div>
+        <h2 id="persona-title"
+          class="font-serif italic text-4xl md:text-7xl font-black text-white mt-4 tracking-tighter shimmer"
+          style="height: 1.2em;">Detecting...</h2>
+        <p id="persona-desc"
+          class="text-[10px] text-muted max-w-[300px] mt-4 font-bold uppercase tracking-[0.3em] leading-relaxed">
+          Analyzing your style DNA to determine your fashion personality.</p>
+      </div>
+
+      <!-- Right: Narrative Insight -->
+      <div class="flex-grow">
+        <div class="eyebrow">✦ Designer's AI Insight</div>
+        <div id="ai-insight-box" class="mt-4">
+          <p id="ai-insight-text" class="shimmer"
+            style="font-family: var(--serif); font-size: 1.8rem; font-style: italic; color: var(--muted); max-width: 800px; min-height: 5rem; line-height: 1.4;">
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top Trend Pieces Gallery -->
+  <div class="trend-gallery" id="trend-gallery">
+    <!-- Trend items will be injected here -->
+  </div>
+
+  <!-- Stat Cards -->
+  <div class="stat-row" id="stat-row">
+    <div class="stat-card">
+      <div class="stat-label">Total Pieces</div>
+      <div class="stat-value shimmer" id="stat-total" style="height:56px;width:80px;"></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Top Style</div>
+      <div class="stat-value shimmer" id="stat-top-style" style="height:56px;width:160px;"></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Top Color</div>
+      <div class="stat-value shimmer" id="stat-top-color" style="height:56px;width:130px;"></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Top Category</div>
+      <div class="stat-value shimmer" id="stat-top-type" style="height:56px;width:150px;"></div>
+    </div>
+  </div>
+
+  <!-- Charts Grid -->
+  <div class="chart-grid">
+    <div class="chart-card">
+      <div class="chart-title"><span></span>Style Distribution</div>
+      <canvas id="chart-styles"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title"><span></span>Color Palette</div>
+      <canvas id="chart-colors"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title"><span></span>Clothing Types</div>
+      <canvas id="chart-types"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title"><span></span>Upload Frequency</div>
+      <canvas id="chart-monthly"></canvas>
+    </div>
+  </div>
+
+  <!-- Style Evolution Timeline -->
+  <div class="timeline-section">
+    <div class="section-label">Style Evolution · Your Journey</div>
+    <div class="timeline-rail" id="timeline-rail">
+      <div class="empty-state" style="padding:0">
+        <p>Loading timeline…</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="/static/js/auth.js" type="module"></script>
+
+  <script>
+    // ── Chart.js Global Defaults ─────────────────────────────────────────────
+    Chart.defaults.color = "rgba(255,255,255,0.4)";
+    Chart.defaults.borderColor = "rgba(255,255,255,0.07)";
+    Chart.defaults.font.family = "'Inter', sans-serif";
+    Chart.defaults.font.size = 10;
+
+    const GRADIENT_COLORS = [
+      "#EC4899", "#F97316", "#8B5CF6", "#06B6D4", "#10B981",
+      "#F59E0B", "#EF4444", "#3B82F6"
+    ];
+
+    function makeChart(ctxId, type, labels, data, options = {}) {
+      const ctx = document.getElementById(ctxId);
+      if (!ctx) return;
+
+      let backgroundColor = GRADIENT_COLORS.slice(0, labels.length);
+      if (type === "line") {
+        const grad = ctx.getContext("2d").createLinearGradient(0, 0, 0, 280);
+        grad.addColorStop(0, "rgba(236,72,153,0.4)");
+        grad.addColorStop(1, "rgba(236,72,153,0)");
+        backgroundColor = grad;
+      }
+
+      new Chart(ctx, {
+        type,
+        data: {
+          labels,
+          datasets: [{
+            data,
+            backgroundColor,
+            borderColor: type === "line" ? "#EC4899" : "transparent",
+            borderWidth: type === "line" ? 2 : 0,
+            borderRadius: type === "bar" ? 4 : 0,
+            fill: type === "line",
+            tension: 0.4,
+            pointBackgroundColor: "#EC4899",
+            pointRadius: 4,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: "rgba(0,0,0,0.85)",
+              titleColor: "#fff",
+              bodyColor: "rgba(255,255,255,0.55)",
+              padding: 12,
+              cornerRadius: 6,
+            }
+          },
+          scales: type === "doughnut" ? {} : {
+            x: { grid: { display: false } },
+            y: { grid: { color: "rgba(255,255,255,0.05)" }, beginAtZero: true }
+          },
+          ...options
+        }
+      });
+    }
+
+    // ── AI Insights & Style Persona Logic ────────────────────────────────────
+    const PERSONA_MAP = {
+      "Minimalist": { title: "The Silent Architect", desc: "You prioritize form, function, and a reduced palette for maximum impact." },
+      "Streetwear": { title: "The Urban Visionary", desc: "Your wardrobe lives at the intersection of utility and high-intensity motion." },
+      "Sportswear": { title: "The Performance Elite", desc: "Engineering-grade comfort and kinetic aesthetics defined by speed." },
+      "Formal": { title: "The Absolute Sovereign", desc: "Precision tailoring and structural authority in every silhouette." },
+      "Casual": { title: "The Ethereal Nomad", desc: "Effortless, fluid transitions between daily life and creative freedom." },
+      "Vintage": { title: "The Time Anomaly", desc: "Reimagining past narratives with a future-facing archival lens." },
+      "Ethnic": { title: "The Heritage Weaver", desc: "A cinematic fusion of cultural storytelling and global fashion." },
+      "Preppy": { title: "The Ivy Alchemist", desc: "Curating refined heritage with a sharp, contemporary edge." }
+    };
+
+    function updateInsights(summary) {
+      const insightEl = document.getElementById("ai-insight-text");
+      const personaTitleEl = document.getElementById("persona-title");
+      const personaDescEl = document.getElementById("persona-desc");
+
+      if (!summary.total) return;
+
+      const topStyle = summary.styles?.[0]?.label || "Eclectic";
+      const topColor = summary.colors?.[0]?.label || "Neutral";
+      const topType = summary.clothing_types?.[0]?.label || "Ensembles";
+
+      // 1. Update Persona Title
+      const persona = PERSONA_MAP[topStyle] || { title: `${topStyle} Pioneer`, desc: "A unique blend of distinct textures and cultural influences." };
+
+      personaTitleEl.classList.remove("shimmer");
+      personaTitleEl.textContent = persona.title;
+      personaDescEl.textContent = persona.desc;
+
+      // 2. Narrative Insight
+      const insights = [
+        `You are currently defining a <span style="color:#fff">${topStyle} Chic Era</span>, showing a clear aesthetic focus.`,
+        `Your palette is anchored in <span style="color:#fff">${topColor} tones</span>, radiating a sophisticated and curated energy.`,
+        `The collection is led by <span style="color:#fff">${topType}</span>, suggesting you favor complete, high-impact silhouettes.`
+      ];
+
+      insightEl.classList.remove("shimmer");
+      insightEl.innerHTML = insights.join(" ");
+    }
+
+    // ── Trend Gallery ────────────────────────────────────────────────────────
+    async function loadTrendGallery(topStyle) {
+      const gallery = document.getElementById("trend-gallery");
+      const token = localStorage.getItem("fv_token"); // ← Standardized
+      if (!gallery || !token) return;
+
+      try {
+        const res = await fetch("/api/history", { headers: { "Authorization": `Bearer ${token}` } });
+        const data = await res.json();
+
+        // --- FIXED: History API returns { history: [...] } ---
+        const items = data.history || [];
+
+        // For demo purposes if no matching styles found, show recent items
+        const trendItems = items.filter(it => it.style === topStyle).slice(0, 4);
+
+        if (trendItems.length === 0) {
+          gallery.innerHTML = `<div class="empty-state" style="grid-column: 1/-1">Add more '${topStyle}' pieces to reveal trends.</div>`;
+          return;
+        }
+
+        gallery.innerHTML = trendItems.map(it => `
+          <div class="trend-item">
+            <img src="${it.image_url}" alt="${it.title || 'Fashion item'}" loading="lazy">
+          </div>
+        `).join("");
+      } catch (err) {
+        console.error(err);
+        gallery.innerHTML = `<div class="empty-state" style="grid-column: 1/-1">Failed to load trend items. Try refreshing.</div>`;
+      }
+    }
+
+    // ── Populate Stat Cards ───────────────────────────────────────────────────
+    function populateStats(data) {
+      const set = (id, val) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.classList.remove("shimmer");
+        el.textContent = val;
+      };
+
+      set("stat-total", data.total || "0");
+      set("stat-top-style", data.styles?.[0]?.label || "—");
+      set("stat-top-color", data.colors?.[0]?.label || "—");
+      set("stat-top-type", data.clothing_types?.[0]?.label || "—");
+    }
+
+    // ── Build Timeline ────────────────────────────────────────────────────────
+    function buildTimeline(timeline) {
+      const rail = document.getElementById("timeline-rail");
+      if (!timeline?.length) {
+        rail.innerHTML = `<p style="color:rgba(255,255,255,0.2);font-size:12px;">No timeline data yet. Upload more pieces to see your journey.</p>`;
+        return;
+      }
+
+      rail.innerHTML = timeline.map(t => `
+        <div class="tl-item">
+          <div class="tl-month">${t.month}</div>
+          <div class="tl-style">${t.dominant_style}</div>
+          <div class="tl-count">${t.count} piece${t.count !== 1 ? "s" : ""}</div>
+        </div>
+      `).join("");
+    }
+
+    // ── Fetch & Render ────────────────────────────────────────────────────────
+    async function loadAnalytics() {
+      const token = localStorage.getItem("fv_token"); // ← Standardized
+      if (!token) {
+        window.location.href = "/login";
+        return;
+      }
+
+      const headers = { "Authorization": `Bearer ${token}` };
+
+      try {
+        const [summaryRes, timelineRes] = await Promise.all([
+          fetch("/api/stats/summary", { headers }),
+          fetch("/api/stats/timeline", { headers }),
+        ]);
+
+        if (!summaryRes.ok) throw new Error("Unauthorized");
+
+        const summary = await summaryRes.json();
+        const timeline = await timelineRes.json();
+
+        populateStats(summary);
+        updateInsights(summary);
+        if (summary.styles?.[0]) loadTrendGallery(summary.styles[0].label);
+
+        // Charts
+        makeChart("chart-styles", "doughnut",
+          summary.styles.map(s => s.label),
+          summary.styles.map(s => s.count)
+        );
+        makeChart("chart-colors", "bar",
+          summary.colors.map(c => c.label),
+          summary.colors.map(c => c.count)
+        );
+        makeChart("chart-types", "doughnut",
+          summary.clothing_types.map(t => t.label),
+          summary.clothing_types.map(t => t.count)
+        );
+        makeChart("chart-monthly", "line",
+          timeline.timeline?.map(t => t.month) || [],
+          timeline.timeline?.map(t => t.count) || []
+        );
+
+        buildTimeline(timeline.timeline || []);
+
+      } catch (err) {
+        console.error("Analytics load error:", err);
+        if (err.message === "Unauthorized") {
+          window.location.href = "/login";
+        } else {
+          document.body.innerHTML = `
+                <div class="empty-state">
+                    <h2>Analytics Unavailable</h2>
+                    <p>Please refresh or check your connection.</p>
+                </div>
+            `;
+        }
+      }
+    }
+
+    // Standardized behavior handled by auth.js via setupGlobalLogout()
+
+    // Initialize
+    loadAnalytics();
+  </script>
+
+  <!-- Fallback for non-module browsers -->
+  <script nomodule>
+    if (!localStorage.getItem('fv_token')) {
+      window.location.replace('/login');
+    }
+  </script>
+
+</body>
+
+</html>
