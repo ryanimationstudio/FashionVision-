@@ -1,61 +1,112 @@
-"""
-Gemini client compatibility layer.
-
-Prefers the new `google.genai` package and falls back to
-`google.generativeai` when needed.
-"""
-
-from __future__ import annotations
-
+import logging
+import time
 from typing import Any
 
+logger = logging.getLogger(__name__)
 
-def _import_backend():
-    """Return (backend_name, module_or_object)."""
+
+def _import_genai():
     try:
-        from google import genai
-        return "google.genai", genai
-    except Exception:
-        pass
+        import google.generativeai as genai
+        return genai
+    except ImportError as exc:
+        raise RuntimeError("google-generativeai not installed") from exc
 
-    try:
-        import google.generativeai as legacy_genai
-        return "google.generativeai", legacy_genai
-    except Exception:
-        pass
 
-    raise ImportError(
-        "No Gemini SDK found. Install `google-genai` (preferred) or `google-generativeai`."
-    )
+def _validate_api_key(api_key: str) -> None:
+    if not api_key or len(api_key) < 20:
+        raise ValueError("Invalid Gemini API Key")
+
+
+def _candidate_models(model: str) -> list[str]:
+    model = (model or "").strip()
+    candidates = [model]
+
+    aliases = {
+        "gemini-1.5-flash": ["gemini-1.5-flash-latest", "gemini-2.0-flash"],
+        "gemini-1.5-pro": ["gemini-1.5-pro-latest", "gemini-2.0-pro"],
+    }
+    candidates.extend(aliases.get(model, []))
+
+    seen = set()
+    out = []
+    for m in candidates:
+        if m and m not in seen:
+            seen.add(m)
+            out.append(m)
+    return out
+
+
+def _is_model_not_found(exc: Exception) -> bool:
+    msg = str(exc).lower()
+    return "404" in msg or "not found" in msg or "does not exist" in msg or "not available" in msg
 
 
 def generate_text(*, api_key: str, model: str, prompt: str) -> str:
-    """Generate text content from Gemini across SDK versions."""
-    backend, sdk = _import_backend()
+    genai = _import_genai()
+    _validate_api_key(api_key)
 
-    if backend == "google.genai":
-        client = sdk.Client(api_key=api_key)
-        response = client.models.generate_content(model=model, contents=prompt)
-        return getattr(response, "text", "") or ""
+    genai.configure(api_key=api_key)
 
-    # Legacy backend
-    sdk.configure(api_key=api_key)
-    m = sdk.GenerativeModel(model)
-    response = m.generate_content(prompt)
-    return getattr(response, "text", "") or ""
+    last_exc: Exception | None = None
+    for candidate in _candidate_models(model):
+        try:
+            time.sleep(1.5)
+
+            gemini_model = genai.GenerativeModel(candidate)
+            response = gemini_model.generate_content(
+                prompt,
+                generation_config={
+                    "temperature": 0.7,
+                    "top_p": 0.9,
+                    "max_output_tokens": 250,
+                },
+            )
+
+            if not response or not getattr(response, "text", None):
+                raise ValueError("Empty response from Gemini")
+
+            return response.text.strip()
+
+        except Exception as e:
+            last_exc = e
+            if _is_model_not_found(e):
+                continue
+            raise
+
+    raise RuntimeError(f"Gemini model not available. Tried: {_candidate_models(model)}") from last_exc
 
 
 def generate_multimodal(*, api_key: str, model: str, prompt: str, image: Any) -> str:
-    """Generate multimodal content (prompt + image) across SDK versions."""
-    backend, sdk = _import_backend()
+    genai = _import_genai()
+    _validate_api_key(api_key)
 
-    if backend == "google.genai":
-        client = sdk.Client(api_key=api_key)
-        response = client.models.generate_content(model=model, contents=[prompt, image])
-        return getattr(response, "text", "") or ""
+    genai.configure(api_key=api_key)
 
-    # Legacy backend
-    sdk.configure(api_key=api_key)
-    m = sdk.GenerativeModel(model)
-    response = m.generate_content([prompt, image])
-    return getattr(response, "text", "") or ""
+    last_exc: Exception | None = None
+    for candidate in _candidate_models(model):
+        try:
+            time.sleep(1.5)
+
+            gemini_model = genai.GenerativeModel(candidate)
+            response = gemini_model.generate_content(
+                [prompt, image],
+                generation_config={
+                    "temperature": 0.7,
+                    "top_p": 0.9,
+                    "max_output_tokens": 250,
+                },
+            )
+
+            if not response or not getattr(response, "text", None):
+                raise ValueError("Empty response from Gemini")
+
+            return response.text.strip()
+
+        except Exception as e:
+            last_exc = e
+            if _is_model_not_found(e):
+                continue
+            raise
+
+    raise RuntimeError(f"Gemini model not available. Tried: {_candidate_models(model)}") from last_exc

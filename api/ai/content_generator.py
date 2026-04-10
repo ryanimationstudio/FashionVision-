@@ -179,15 +179,12 @@ def generate(attrs: dict, raw_data: dict = None) -> dict:
     if raw_data is None:
         raw_data = {}
 
-    # Board suggestions always from heuristics for speed
     boards = suggest_boards(attrs)
 
-    # Lazy-read key at call time (avoids module-load race with dotenv)
     GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
     has_key = len(GEMINI_API_KEY) > 20
+    GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.0-flash").strip() or "gemini-2.0-flash"
 
-    # 🚀 V2 OPTIMIZATION: If detector already used Gemini Vision to get a rich title
-    # from the image itself, DO NOT waste API calls & time generating a text-only copy!
     if raw_data.get("confidence") == "high" and attrs.get("generated_title"):
         logger.info("ContentGenerator: Propagating rich Vision-generated title directly.")
         return get_fallback_content(attrs, raw_data)
@@ -207,43 +204,41 @@ def generate(attrs: dict, raw_data: dict = None) -> dict:
         - Season: {attrs.get('season')}
         - Occasion: {attrs.get('occasion')}
 
-        Write engaging product metadata. 
+        Write engaging product metadata.
         Output STRICTLY as a valid JSON object with these exact keys:
         "title": A catchy, SEO-friendly product title (max 60 chars).
         "description": A 2-sentence engaging product description.
         "hashtags": An array of 4-5 relevant Instagram hashtags.
         """
 
-        logger.info("Calling Google Gemini API for content generation...")
-        
-        # Wrap Gemini in a timeout to prevent hanging the pipeline
+        logger.info("Calling Google Gemini API for content generation with model=%s...", GEMINI_MODEL)
+
         with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
             future = executor.submit(
                 generate_text,
                 api_key=GEMINI_API_KEY,
-                model="gemini-1.5-flash",
+                model=GEMINI_MODEL,
                 prompt=prompt,
             )
             try:
-                response_text = future.result(timeout=15) # 15s timeout for text generation
+                response_text = future.result(timeout=15)
                 generated_content = _parse_gemini_json(response_text)
             except concurrent.futures.TimeoutError:
-                logger.error("🛑 Gemini API timed out. Activating Fallback.")
+                logger.error("Gemini API timed out. Activating fallback.")
                 return get_fallback_content(attrs, raw_data)
-        
-        # Merge Gemini content with heuristic boards
+
         return {
             "title": generated_content.get("title", generate_heuristic_title(attrs, raw_data)),
             "description": generated_content.get("description", generate_heuristic_description(attrs, raw_data)),
             "hashtags": generated_content.get("hashtags", generate_heuristic_hashtags(attrs)),
-            "suggested_boards": boards
+            "suggested_boards": boards,
         }
 
     except Exception as e:
         error_msg = str(e).lower()
-        if any(w in error_msg for w in ["429", "quota", "exhausted", "limit"]):
-            logger.error("🛑 Gemini Quota Exhausted / Rate Limited. Activating Fallback.")
+        if any(w in error_msg for w in ["404", "429", "quota", "exhausted", "limit"]):
+            logger.error("Gemini unavailable or quota exhausted. Activating fallback.")
         else:
-            logger.error(f"Gemini Generation failed: {e}. Activating Fallback.")
-            
+            logger.error("Gemini generation failed: %s. Activating fallback.", e)
+
         return get_fallback_content(attrs, raw_data)
